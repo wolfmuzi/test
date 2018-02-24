@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingStockMapper">
+
+	<sql id="kindclothingStockColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.bar_code AS "barCode",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.bind_status AS "bindStatus",
+		a.epc AS "epc",
+		a.shelves_status AS "shelvesStatus",
+		a.shelves_id AS "shelves.id",
+		a.is_lend AS "isLend",
+		a.remarks AS "remarks",
+		color.name AS "colorName",
+		kindclothing.style AS  "style",
+		kindclothing.pictures AS  "img",
+		kindclothing.editionnumber AS  "panCode",
+		kindclothing.id AS  "kindclothing.id",
+		supplier.name AS "supplierName",
+		warehouse.name AS "warehouseName",
+				
+				
+				
+		sizes.name AS "sizesName",
+
+				
+		supplier.name AS "supplier.name",
+				
+				
+				
+				
+		shelves.name AS "shelves.name"
+	</sql>
+
+	<sql id="kindclothingStockJoins">
+
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN base_shelves shelves ON shelves.id = a.shelves_id
+		LEFT JOIN base_kindclothing kindclothing ON kindclothing.id = a.kindClothing_id
+		LEFT JOIN base_colors color ON color.id = kindclothing.colour_id
+		LEFT JOIN base_warehouse warehouse ON warehouse.id = kindclothing.warehouse_id
+		LEFT JOIN base_sizes sizes ON sizes.id = kindclothing.sizes_id
+	</sql>
+
+
+	<select id="get" resultType="KindclothingStock" >
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="KindclothingStock" >
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="barCode != null and barCode != ''">
+				AND a.bar_code =
+				#{barCode}
+			</if>
+
+			<if test="epc != null and epc != ''">
+				AND a.epc =
+				#{epc}
+			</if>
+
+			<if test="name != null and name != ''">
+				AND a.name LIKE
+				<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="style != null and style != ''">
+				AND kindclothing.style LIKE
+				<if test="dbName == 'oracle'">'%'||#{style}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{style}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{style},'%')</if>
+			</if>
+			<if test="panCode != null and panCode != ''">
+				AND kindclothing.editionnumber LIKE
+				<if test="dbName == 'oracle'">'%'||#{panCode}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{panCode}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{panCode},'%')</if>
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+			<if test="shelves != null and shelves.id != null and shelves.id != ''">
+				AND a.shelves_id = #{shelves.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+	<select id="byEpcListData" resultType="KindclothingStock" parameterType="com.iuling.mods.fabric.param.FabricBindParam">
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = '0'
+
+			AND  epc in <foreach collection="epcList" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+	<select id="findListSubmit" resultType="KindclothingStock" >
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="style != null and style != ''">
+				AND kindclothing.style = #{style}
+			</if>
+			<if test="colorName != null and colorName != ''">
+				AND color.name = #{colorName}
+			</if>
+			<if test="supplierName != null and supplierName != ''">
+				AND supplier.name = #{supplierName}
+			</if>
+			<if test="panCode != null and panCode != ''">
+				AND kindclothing.editionnumber =
+				#{panCode}
+			</if>
+
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+
+	<!--根据epc获取样衣信息-->
+	<select id="findKindclothingByEpc" resultType="KindclothingStock" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingBindParam">
+		SELECT
+		k.shelves_id AS  "shelves.id",
+		b.name AS  "shelves.name",
+
+		a.`name` as "kindClothing.name",
+		a.style as "kindClothing.style",
+		a.editionnumber as "kindClothing.editionnumber",
+		a.number as "kindClothing.number",
+		s.id as "kindClothing.supplier.id",
+		s.`name` as "kindClothing.supplier.name",
+		w.`name` as "warehouse.name",
+		k.bar_code,k.epc,k.name,k.supplier_id AS  "supplier.id",
+		b.`code` as "shelves.code",
+
+		s1.name as "shelves.supplier.name"
+
+		FROM kindclothing_stock k
+		LEFT JOIN base_kindclothing a ON a.number=k.bar_code
+		LEFT JOIN base_shelves b ON b.id  = k.shelves_id
+		LEFT JOIN base_supplier s ON s.id= k.supplier_id
+		LEFT JOIN base_supplier s1 ON s1.id= b.supplier_id
+		LEFT JOIN base_warehouse w ON w.id = a.warehouse_id
+		<where>
+			k.epc=#{epc}
+			AND a.del_flag = 0
+		</where>
+	</select>
+
+
+	<!--根据样衣条码获取样衣信息-->
+	<select id="findKindclothingByBarCode" resultType="KindclothingStock" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingBindParam">
+		SELECT
+		k.`name` AS "name",
+		k.epc AS "epc",
+		k.bar_code AS "barCode",
+		k.shelves_status AS "shelvesStatus",
+
+		a.style AS "style",
+		a.editionnumber AS "editionnumber",
+		a.pictures AS "img",
+
+		s.`name` AS "supplierName",
+		w.`name` AS "warehouseName",
+		b.`name` AS "shelvesName"
+
+
+		FROM kindclothing_stock k
+		LEFT JOIN base_kindclothing a ON a.number=k.bar_code
+		LEFT JOIN base_shelves b ON k.shelves_id=b.id
+		LEFT JOIN base_supplier s ON s.id= a.supplier_id
+		LEFT JOIN base_warehouse w ON w.id = a.warehouse_id
+		<where>
+			k.del_flag = 0
+			<if test="barCode != null and barCode != ''">
+				AND k.bar_code = #{barCode}
+			</if>
+		</where>
+	</select>
+
+	<!--查找-->
+	<select id="checkKindclothing" resultType="KindclothingStock" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingBindParam">
+		SELECT
+		k.shelves_id AS  "shelves.id",
+		k.bind_status AS "bindStatus",
+		k.shelves_status AS "shelvesStatus",
+		k.is_lend AS "isLend",
+
+		b.name AS  "shelves.name",
+
+		a.`name` as "kindClothing.name",
+		a.style as "kindClothing.style",
+		a.editionnumber as "kindClothing.editionnumber",
+		a.number as "kindClothing.number",
+		a.supplier_id as "kindClothing.supplier.id",
+		s.`name` as "kindClothing.supplier.name",
+		w.`name` as "warehouse.name",
+
+		b.`code` as "shelves.code",
+		s1.name as "shelves.supplier.name"
+
+		FROM kindclothing_stock k
+		LEFT JOIN base_kindclothing a ON a.number=k.bar_code
+		LEFT JOIN base_shelves b ON b.id  = k.shelves_id
+		LEFT JOIN base_supplier s ON s.id= k.supplier_id
+		LEFT JOIN base_supplier s1 ON s1.id = b.supplier_id
+		LEFT JOIN base_warehouse w ON w.id = a.warehouse_id
+		<where>
+			k.epc=#{epc}
+			AND a.del_flag = 0
+		</where>
+		ORDER BY a.update_date DESC
+	</select>
+
+	<select id="findAllList" resultType="KindclothingStock" >
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllKindClothingStock" resultType="KindclothingStock" >
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = 0
+			${dataScope}
+		</where>
+	</select>
+
+
+
+
+
+
+	<select id="findListByParam1" resultType="KindclothingStock" parameterType="com.iuling.mods.fabric.param.FabricInventoryParam">
+		SELECT
+		<include refid="kindclothingStockColumns"/>
+		FROM kindclothing_stock a
+		<include refid="kindclothingStockJoins"/>
+		<where>
+			a.del_flag = '0'
+			AND a.epc in
+			<foreach item="item" index="index" collection="epcList" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+
+
+
+	<insert id="insert">
+		INSERT INTO kindclothing_stock(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			bar_code,
+			name,
+			supplier_id,
+			bind_status,
+			epc,
+			shelves_status,
+			shelves_id,
+			is_lend,
+			kindClothing_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{barCode},
+			#{name},
+			#{supplier.id},
+			#{bindStatus},
+			#{epc},
+			#{shelvesStatus},
+			#{shelves.id},
+			#{isLend},
+			#{kindClothing.id},
+			#{remarks}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE kindclothing_stock SET
+		update_by = #{updateBy.id},
+		update_date = #{updateDate},
+		bar_code = #{barCode},
+		<if test="kindClothing != null and kindClothing.id != null and kindClothing.id != ''">
+			kindClothing_id = #{kindClothing.id},
+		</if>
+
+		name = #{name},
+		supplier_id = #{supplier.id},
+		bind_status = #{bindStatus},
+		epc = #{epc},
+		shelves_status = #{shelvesStatus},
+		shelves_id = #{shelves.id},
+		is_lend = #{isLend},
+		remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_stock
+		WHERE id = #{id}
+	</update>
+
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_stock SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingStock" statementType="STATEMENT">
+		select * FROM kindclothing_stock  where ${propertyName} = '${value}'
+	</select>
+
+</mapper>

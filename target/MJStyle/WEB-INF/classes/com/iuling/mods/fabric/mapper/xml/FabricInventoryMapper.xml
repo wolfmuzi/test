@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricInventoryMapper">
+    
+	<sql id="fabricInventoryColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.code AS "code",
+		a.inventory_num AS "inventoryNum",
+		a.stock_num AS "stockNum",
+		a.k_num AS "kNum",
+		a.y_num AS "yNum",
+		a.inventory_date AS "inventoryDate",
+		a.inventory_user AS "inventoryUser.id",
+		a.status AS "status",
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+		inventoryUser.name AS "inventoryUser.name"
+	</sql>
+	
+	<sql id="fabricInventoryJoins">
+		
+		LEFT JOIN sys_user inventoryUser ON inventoryUser.id = a.inventory_user
+	</sql>
+
+
+	<select id="get" resultType="FabricInventory" >
+		SELECT
+		<include refid="fabricInventoryColumns"/>
+		FROM fabric_inventory a
+		<include refid="fabricInventoryJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+
+	<select id="getByCode" resultType="FabricInventory" >
+		SELECT
+		<include refid="fabricInventoryColumns"/>
+		FROM fabric_inventory a
+		<include refid="fabricInventoryJoins"/>
+		WHERE a.code = #{code}
+	</select>
+	
+	<select id="findList" resultType="FabricInventory" >
+		SELECT 
+			<include refid="fabricInventoryColumns"/>
+		FROM fabric_inventory a
+		<include refid="fabricInventoryJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="code != null and code != ''">
+				AND a.code = #{code}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+
+
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="FabricInventory" >
+		SELECT 
+			<include refid="fabricInventoryColumns"/>
+		FROM fabric_inventory a
+		<include refid="fabricInventoryJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fabric_inventory(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			code,
+			inventory_num,
+			stock_num,
+			k_num,
+			y_num,
+			inventory_date,
+			inventory_user,
+			status,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{code},
+			#{inventoryNum},
+			#{stockNum},
+			#{kNum},
+			#{yNum},
+			#{inventoryDate},
+			#{inventoryUser.id},
+			#{status},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_inventory SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			del_flag = #{delFlag},
+			code = #{code},
+			inventory_num = #{inventoryNum},
+			stock_num = #{stockNum},
+			k_num = #{kNum},
+			y_num = #{yNum},
+			inventory_date = #{inventoryDate},
+			inventory_user = #{inventoryUser.id},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_inventory
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_inventory SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricInventory" statementType="STATEMENT">
+		select * FROM fabric_inventory  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingReturnMapper">
+    
+	<sql id="kindclothingReturnColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.base_common_role_id AS "baseCommonRole.id",
+		a.return_no AS "returnNo",
+		a.role_type AS "roleType",
+		a.surplus_num AS "surplusNum",
+		a.return_num AS "returnNum",
+		a.return_date AS "returnDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+				
+				
+				
+				
+				
+		baseCommonRole.name AS "baseCommonRole.name"
+	</sql>
+
+	<!-- 根据用户的未归还获得信息 -->
+	<select id="findListByParam" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingLendParam" resultType="KindclothingLendItem" >
+		SELECT
+		k.base_common_role_id,
+		k.supplier_id as "supplier.id",
+		k.editionnumber,
+		k.bar_code,
+		k.create_date as lendDate,
+		k.lend_no,k.`name`,k.style,
+		l.expected_return_date as expectedReturnDate
+		from kindclothing_lend_item k
+		LEFT JOIN kindclothing_lend l on l.lend_no=k.lend_no
+		<where>
+			<if test="lendIsReturn != null">
+				k.lend_isreturn = #{lendIsReturn}
+			</if>
+			<if test="lendUserId != null and lendUserId != ''">
+				AND k.base_common_role_id = #{lendUserId}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据条形码获得归还人信息 -->
+	<select id="findByBarCodeCommonRole" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingLendParam" resultType="KindclothingLendItem" >
+		SELECT
+		k.* ,
+		s.bar_code AS "barCode1",
+		a.name AS "baseCommonRole.name",
+		a.code AS "baseCommonRole.code",
+		a.type AS "baseCommonRole.type"
+		from kindclothing_lend_item k
+		LEFT JOIN kindclothing_stock s ON s.epc = k.bar_code
+		LEFT JOIN base_common_role a ON a.id = k.base_common_role_id
+		<where>
+			<if test="lendIsReturn != null">
+				k.lend_isreturn = #{lendIsReturn}
+			</if>
+			<if test="barCode1 != null and barCode1 != ''">
+				AND s.bar_code = #{barCode1}
+			</if>
+		</where>
+	</select>
+
+	<!--根据epc获得借用的详情数据-->
+	<select id="selectByEpcDatas" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingLendParam" resultType="KindclothingLendItem" >
+		SELECT
+		k.base_common_role_id,
+		k.supplier_id as "supplier.id",
+		k.editionnumber,
+		k.bar_code,
+		k.create_date as lendDate,
+		k.lend_no,k.`name`,k.style,
+		l.expected_return_date as expectedReturnDate
+		from kindclothing_lend_item k
+		LEFT JOIN kindclothing_lend l on l.lend_no=k.lend_no
+		<where>
+			<if test="lendIsReturn != null">
+				k.lend_isreturn = #{lendIsReturn}
+			</if>
+			<if test="lendUserId != null and lendUserId != ''">
+				AND k.base_common_role_id = #{lendUserId}
+			</if>
+			AND k.bar_code IN
+				<foreach item="item" index="index" collection="epcList" open="("
+						 separator="," close=")">
+					#{item}
+				</foreach>
+		</where>
+	</select>
+
+	<sql id="kindclothingReturnJoins">
+		
+		LEFT JOIN base_common_role baseCommonRole ON baseCommonRole.id = a.base_common_role_id
+	</sql>
+	
+    
+	<select id="get" resultType="KindclothingReturn" >
+		SELECT 
+			<include refid="kindclothingReturnColumns"/>
+		FROM kindclothing_return a
+		<include refid="kindclothingReturnJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingReturn" >
+		SELECT 
+			<include refid="kindclothingReturnColumns"/>
+		FROM kindclothing_return a
+		<include refid="kindclothingReturnJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="baseCommonRole != null and baseCommonRole.id != null and baseCommonRole.id != ''">
+				AND a.base_common_role_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{baseCommonRole.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{baseCommonRole.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{baseCommonRole.id},'%')</if>
+			</if>
+			<if test="returnNo != null and returnNo != ''">
+				AND a.return_no = #{returnNo}
+			</if>
+			<if test="beginReturnDate != null and endReturnDate != null and beginReturnDate != '' and endReturnDate != ''">
+				AND a.return_date BETWEEN #{beginReturnDate} AND #{endReturnDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="KindclothingReturn" >
+		SELECT 
+			<include refid="kindclothingReturnColumns"/>
+		FROM kindclothing_return a
+		<include refid="kindclothingReturnJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_return(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			base_common_role_id,
+			return_no,
+			role_type,
+			surplus_num,
+			return_num,
+			return_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{baseCommonRole.id},
+			#{returnNo},
+			#{roleType},
+			#{surplusNum},
+			#{returnNum},
+			#{returnDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_return SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			base_common_role_id = #{baseCommonRole.id},
+			return_no = #{returnNo},
+			role_type = #{roleType},
+			surplus_num = #{surplusNum},
+			return_num = #{returnNum},
+			return_date = #{returnDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_return
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_return SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingReturn" statementType="STATEMENT">
+		select * FROM kindclothing_return  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

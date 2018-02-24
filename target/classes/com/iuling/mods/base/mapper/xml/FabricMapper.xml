@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.base.mapper.FabricMapper">
+    
+	<sql id="fabricColumns">
+		a.id AS "id",
+		a.barcode AS "barcode",
+		a.name AS "name",
+		a.number AS "number",
+		a.supplier_id AS "supplier.id",
+		a.color_id AS "color.id",
+		a.weight AS "weight",
+		a.width AS "width",
+		a.spec AS "spec",
+		a.ingredients AS "ingredients",
+		a.price01 AS "price01",
+		a.price02 AS "price02",
+		a.shrinkage AS "shrinkage",
+		a.kg AS "kg",
+		a.warehouse_id AS "warehouse.id",
+		a.purchase_time AS "purchaseTime",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+				
+				
+				
+				
+		supplier.name AS "supplier.name",
+				
+		color.name AS "color.name",
+				
+				
+		shelves.name AS "shelves.name",
+				
+				
+				
+				
+				
+				
+		warehouse.name AS "warehouse.name"
+	</sql>
+	
+	<sql id="fabricJoins">
+		
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN base_colors color ON color.id = a.color_id
+		LEFT JOIN base_warehouse warehouse ON warehouse.id = a.warehouse_id
+		LEFT JOIN fabric_stock stock ON stock.bar_code = a.barcode
+		LEFT JOIN base_shelves shelves ON shelves.id = stock.shelves_id
+	</sql>
+	
+    
+	<select id="get" resultType="Fabric" >
+		SELECT 
+			<include refid="fabricColumns"/>
+		FROM base_fabric a
+		<include refid="fabricJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+
+
+	<select id="findListJoin" resultType="Fabric" >
+		SELECT
+		a.*,supplier.name AS "supplier.name",shelves.name AS "shelves.name",color.name AS "color.name"
+		FROM base_fabric a
+		LEFT JOIN base_colors color ON color.id = a.color_id
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN fabric_stock stock ON stock.bar_code = a.barcode
+		LEFT JOIN base_shelves shelves ON shelves.id = stock.shelves_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+
+				AND stock.epc = #{epc}
+
+		</where>
+
+				ORDER BY a.update_date DESC
+
+	</select>
+
+
+	<select id="findList" resultType="Fabric" >
+		SELECT 
+			<include refid="fabricColumns"/>
+		FROM base_fabric a
+		<include refid="fabricJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="barcode != null and barcode != ''">
+				AND a.barcode = #{barcode}
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+			<if test="color != null and color.id != null and color.id != ''">
+				AND a.color_id = #{color.id}
+			</if>
+			<if test="ingredients != null and ingredients != ''">
+				AND a.ingredients = #{ingredients}
+			</if>
+			<if test="beginPurchaseTime != null and endPurchaseTime != null and beginPurchaseTime != '' and endPurchaseTime != ''">
+				AND a.purchase_time BETWEEN #{beginPurchaseTime} AND #{endPurchaseTime}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Fabric" >
+		SELECT 
+			<include refid="fabricColumns"/>
+		FROM base_fabric a
+		<include refid="fabricJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO base_fabric(
+			id,
+			barcode,
+			name,
+			number,
+			supplier_id,
+			color_id,
+			weight,
+			width,
+			spec,
+			ingredients,
+			price01,
+			price02,
+			shrinkage,
+			kg,
+			warehouse_id,
+			purchase_time,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{barcode},
+			#{name},
+			#{number},
+			#{supplier.id},
+			#{color.id},
+			#{weight},
+			#{width},
+			#{spec},
+			#{ingredients},
+			#{price01},
+			#{price02},
+			#{shrinkage},
+			#{kg},
+			#{warehouse.id},
+			#{purchaseTime},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE base_fabric SET 	
+			barcode = #{barcode},
+			name = #{name},
+			number = #{number},
+			supplier_id = #{supplier.id},
+			color_id = #{color.id},
+			weight = #{weight},
+			width = #{width},
+			spec = #{spec},
+			ingredients = #{ingredients},
+			price01 = #{price01},
+			price02 = #{price02},
+			shrinkage = #{shrinkage},
+			kg = #{kg},
+			warehouse_id = #{warehouse.id},
+			purchase_time = #{purchaseTime},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM base_fabric
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE base_fabric SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Fabric" statementType="STATEMENT">
+		select * FROM base_fabric  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

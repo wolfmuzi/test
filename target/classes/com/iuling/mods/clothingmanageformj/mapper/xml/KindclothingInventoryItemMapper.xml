@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingInventoryItemMapper">
+    
+	<sql id="kindclothingInventoryItemColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.kindclothing_id AS "kindclothing.id",
+		a.type AS "type",
+		a.kindclothing_inventory_id AS "kindclothingInventory.id",
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+		kindclothing.name AS "kindclothing.name",
+
+
+		kindclothingInventory.code AS "kindclothingInventory.code"
+	</sql>
+	
+	<sql id="kindclothingInventoryItemJoins">
+		
+		LEFT JOIN base_kindclothing kindclothing ON kindclothing.id = a.kindclothing_id
+		LEFT JOIN kindclothing_inventory kindclothingInventory ON kindclothingInventory.id = a.kindclothing_inventory_id
+	</sql>
+	
+    
+	<select id="get" resultType="KindclothingInventoryItem" >
+		SELECT 
+			<include refid="kindclothingInventoryItemColumns"/>
+		FROM kindclothing_inventory_item a
+		<include refid="kindclothingInventoryItemJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingInventoryItem" >
+		SELECT 
+			<include refid="kindclothingInventoryItemColumns"/>
+		FROM kindclothing_inventory_item a
+		<include refid="kindclothingInventoryItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!--根据盘点单号、类型查询盘亏、盘盈信息-->
+	<select id="findList1" resultType="KindclothingInventoryItem" >
+		SELECT
+			k.bar_code AS "kindclothingStock.barCode",
+			k.epc AS "kindclothingStock.epc",
+			k.supplier_id AS "kindclothingStock.supplier.id",
+			k.shelves_status AS "kindclothingStock.shelvesStatus",
+
+			supplier.`name` AS "kindclothingStock.supplier.name",
+			<include refid="kindclothingInventoryItemColumns"/>
+
+		FROM kindclothing_inventory_item a
+		<include refid="kindclothingInventoryItemJoins"/>
+		LEFT JOIN kindclothing_stock k ON a.kindclothing_id = k.kindclothing_id
+		LEFT JOIN base_supplier supplier ON k.supplier_id = supplier.id
+
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+			<if test="code != null and code != ''">
+				AND kindclothingInventory.code = #{code}
+			</if>
+			<if test="kindclothingStock != null and kindclothingStock.barCode != null and kindclothingStock.barCode != ''">
+				AND k.bar_code = #{kindclothingStock.barCode}
+			</if>
+			<if test="kindclothingStock != null and kindclothingStock.epc != null and kindclothingStock.epc != ''">
+				AND k.epc = #{kindclothingStock.epc}
+			</if>
+			<if test="kindclothingStock != null and kindclothingStock.shelvesStatus != null and kindclothingStock.shelvesStatus != ''">
+				AND k.shelves_status = #{kindclothingStock.shelvesStatus}
+			</if>
+			<if test="kindclothing != null and kindclothing.name != null and kindclothing.name != ''">
+				AND kindclothing.name = #{kindclothing.name}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<!--查询盘盈还有未上架的信息-->
+	<select id="findByParam" resultType="KindclothingInventoryItem" >
+		SELECT
+			k.bar_code AS "kindclothingStock.barCode",
+			k.epc AS "kindclothingStock.epc",
+			k.supplier_id AS "kindclothingStock.supplier.id",
+			k.shelves_status AS "kindclothingStock.shelvesStatus",
+
+			supplier.`name` AS "kindclothingStock.supplier.name",
+			<include refid="kindclothingInventoryItemColumns"/>
+
+		FROM kindclothing_inventory_item a
+		<include refid="kindclothingInventoryItemJoins"/>
+		LEFT JOIN kindclothing_stock k ON a.kindclothing_id = k.kindclothing_id
+		LEFT JOIN base_supplier supplier ON k.supplier_id = supplier.id
+
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+			<if test="code != null and code != ''">
+				AND kindclothingInventory.code = #{code}
+			</if>
+			<if test="kindclothingStock != null and kindclothingStock.shelvesStatus != null and kindclothingStock.shelvesStatus != ''">
+				AND k.shelves_status = #{kindclothingStock.shelvesStatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<select id="findAllList" resultType="KindclothingInventoryItem" >
+		SELECT 
+			<include refid="kindclothingInventoryItemColumns"/>
+		FROM kindclothing_inventory_item a
+		<include refid="kindclothingInventoryItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_inventory_item(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			kindclothing_id,
+			type,
+			kindclothing_inventory_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{kindclothing.id},
+			#{type},
+			#{kindclothingInventory.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_inventory_item SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			del_flag = #{delFlag},
+			kindclothing_id = #{kindclothing.id},
+			type = #{type},
+			kindclothing_inventory_id = #{kindclothingInventory.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_inventory_item
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_inventory_item SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingInventoryItem" statementType="STATEMENT">
+		select * FROM kindclothing_inventory_item  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

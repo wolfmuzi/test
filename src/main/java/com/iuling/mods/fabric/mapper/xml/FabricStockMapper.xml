@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricStockMapper">
+    
+	<sql id="fabricStockColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.bar_code AS "barCode",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.bind_status AS "bindStatus",
+		a.epc AS "epc",
+		a.shelves_status AS "shelvesStatus",
+		a.shelves_id AS "shelves.id",
+		a.remarks AS "remarks",
+		color.name AS "colorName",
+		fabric.number AS "number",
+		fabric.id AS "fabric.id",
+		supplier.name AS "supplierName",
+				
+				
+				
+				
+				
+
+		supplier.name AS "supplier.name",
+		warehouse.name AS "warehouseName",
+				
+				
+				
+				
+		shelves.name AS "shelves.name"
+	</sql>
+	
+	<sql id="fabricStockJoins">
+		LEFT JOIN base_fabric fabric ON fabric.id = a.fabric_id
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN base_colors color ON color.id = fabric.color_id
+		LEFT JOIN base_shelves shelves ON shelves.id = a.shelves_id
+		LEFT JOIN base_warehouse warehouse ON warehouse.id = fabric.warehouse_id
+	</sql>
+	
+    
+	<select id="get" resultType="FabricStock" >
+		SELECT 
+			<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="FabricStock" >
+		SELECT
+		<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="barCode != null and barCode != ''">
+				AND a.bar_code =
+				#{barCode}
+
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name LIKE
+				<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="number != null and number != ''">
+				AND fabric.number LIKE
+				<if test="dbName == 'oracle'">'%'||#{number}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{number}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{number},'%')</if>
+			</if>
+
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+			<if test="bindStatus != null and bindStatus != ''">
+				AND a.bind_status = #{bindStatus}
+			</if>
+			<if test="shelvesStatus != null and shelvesStatus != ''">
+				AND a.shelves_status = #{shelvesStatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+	<select id="checkFabricByEpcList" resultType="FabricStock" parameterType="com.iuling.mods.fabric.param.FabricBindParam">
+		SELECT
+		<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		<where>
+			a.del_flag = '0'
+
+			AND  epc in <foreach collection="epcList" index="index" item="item" open="(" separator="," close=")">
+			               #{item}
+			       </foreach>
+		</where>
+
+				ORDER BY a.update_date DESC
+
+	</select>
+
+
+	<select id="findListSubmit" resultType="FabricStock" >
+		SELECT
+		<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="number != null and number != ''">
+				AND fabric.number = #{number}
+			</if>
+			<if test="colorName != null and colorName != ''">
+				AND color.name = #{colorName}
+			</if>
+			<if test="supplierName != null and supplierName != ''">
+				AND supplier.name = #{supplierName}
+			</if>
+
+
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="FabricStock" >
+		SELECT
+		<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+	<select id="findListByParam" resultType="Fabric" parameterType="com.iuling.mods.fabric.param.FabricShelvesParam">
+		SELECT
+		f.*,a.epc,
+		supplier.id AS "supplier.id",
+		supplier.name AS "supplier.name",
+		color.id AS "color.id",
+		color.name AS "color.name",
+		a.shelves_status AS "shelvesStatus"
+		FROM fabric_stock a
+		LEFT JOIN  base_fabric f ON f.barcode  = a.bar_code
+		LEFT JOIN base_colors color ON color.id = f.color_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+		LEFT JOIN base_shelves shelves ON  shelves.id = #{shelvesId}
+		<where>
+			a.del_flag = '0'
+			AND a.supplier_id = shelves.supplier_id
+			<if test="bindStatus != null and bindStatus != ''">
+				AND a.bind_status = #{bindStatus}
+			</if>
+			<if test="shelvesStatus != null and shelvesStatus != ''">
+				AND a.shelves_status = #{shelvesStatus}
+			</if>
+			AND a.epc in
+			<foreach item="item" index="index" collection="epcList" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+
+
+	<select id="findListByParam2" resultType="Fabric" parameterType="com.iuling.mods.fabric.param.FabricShelvesParam">
+		SELECT
+		f.*,a.epc,
+		supplier.id AS "supplier.id",
+		supplier.name AS "supplier.name",
+		color.id AS "color.id",
+		color.name AS "color.name"
+		FROM fabric_stock a
+		LEFT JOIN  base_fabric f ON f.barcode  = a.bar_code
+		LEFT JOIN base_colors color ON color.id = f.color_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+
+		<where>
+			a.del_flag = '0'
+
+			AND a.epc in
+			<foreach item="item" index="index" collection="epcList" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+
+
+	<select id="findListByParam1" resultType="FabricStock" parameterType="com.iuling.mods.fabric.param.FabricInventoryParam">
+		SELECT
+		<include refid="fabricStockColumns"/>
+		FROM fabric_stock a
+		<include refid="fabricStockJoins"/>
+		<where>
+			a.del_flag = '0'
+			AND a.epc in
+			<foreach item="item" index="index" collection="epcList" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+
+
+
+
+	<select id="checkFabric" resultType="FabricStock" parameterType="com.iuling.mods.fabric.param.FabricBindParam">
+		SELECT
+		f.name AS "fabric.name",
+		f.spec AS "fabric.spec",
+		f.ingredients AS "fabric.ingredients",
+		f.width AS "fabric.width",
+		f.barcode AS "fabric.barcode",
+		f.weight AS "fabric.weight",
+		f.price01 AS "fabric.price01",
+		f.price02 AS "fabric.price02",
+
+
+
+		supplier.id AS "fabric.supplier.id",
+		supplier.name AS "fabric.supplier.name",
+		shelves.id AS "shelves.id",
+		shelves.name AS "shelves.name",
+		shelves.code AS "shelves.code",
+		supplier1.name AS "shelves.supplier.name"
+		FROM fabric_stock a
+		LEFT JOIN  base_fabric f ON f.barcode  = a.bar_code
+		LEFT JOIN base_shelves shelves ON shelves.id = a.shelves_id
+		LEFT JOIN base_supplier supplier1 ON supplier1.id = shelves.supplier_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+		<where>
+			a.del_flag = '0'
+			AND a.epc = #{epc}
+
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+
+
+
+	<select id="checkFabricByBarCode" resultType="FabricStock" parameterType="com.iuling.mods.fabric.param.FabricBindParam">
+		SELECT
+		f.name AS "fabric.name",
+		f.spec AS "fabric.spec",
+		f.ingredients AS "fabric.ingredients",
+		f.width AS "fabric.width",
+		f.barcode AS "fabric.barcode",
+		f.number AS "number",
+
+		f.weight AS "fabric.weight",
+		f.price01 AS "fabric.price01",
+		f.price02 AS "fabric.price02",
+		a.*,
+		warehouse.name AS "warehouseName",
+
+		supplier.id AS "fabric.supplier.id",
+		supplier.name AS "fabric.supplier.name",
+		shelves.id AS "shelves.id",
+		shelves.name AS "shelves.name",
+		shelves.code AS "shelves.code",
+		supplier1.name AS "shelves.supplier.name"
+		FROM fabric_stock a
+		LEFT JOIN  base_fabric f ON f.barcode  = a.bar_code
+		LEFT JOIN base_shelves shelves ON shelves.id = a.shelves_id
+		LEFT JOIN base_supplier supplier1 ON supplier1.id = shelves.supplier_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+		LEFT JOIN base_warehouse warehouse ON warehouse.id = f.warehouse_id
+		<where>
+			a.del_flag = '0'
+			AND a.bar_code = #{barCode}
+			AND a.bind_status = "2"
+
+		</where>
+
+		ORDER BY a.update_date DESC
+
+	</select>
+	
+	<insert id="insert" >
+		INSERT INTO fabric_stock(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+
+			bar_code,
+			name,
+			supplier_id,
+			bind_status,
+			epc,
+			shelves_status,
+			shelves_id,
+
+			fabric_id,
+
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{barCode},
+			#{name},
+			#{supplier.id},
+			#{bindStatus},
+			#{epc},
+			#{shelvesStatus},
+			#{shelves.id},
+			#{fabric.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_stock SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			bar_code = #{barCode},
+		<if test="fabric != null and fabric.id != null and fabric.id != ''">
+			fabric_id = #{fabric.id},
+		</if>
+
+			del_flag = #{delFlag},
+			name = #{name},
+			supplier_id = #{supplier.id},
+			bind_status = #{bindStatus},
+			epc = #{epc},
+			shelves_status = #{shelvesStatus},
+			shelves_id = #{shelves.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_stock
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_stock SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricStock" statementType="STATEMENT">
+		select * FROM fabric_stock  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

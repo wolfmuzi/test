@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricShelvesItemMapper">
+    
+	<sql id="fabricShelvesItemColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.code AS "code",
+		a.epc AS "epc",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.color_id AS "colors.id",
+		a.ingredients AS "ingredients",
+		a.fabric_shelves_id AS "fabricShelves.id",
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+				
+				
+				
+		supplier.name AS "supplier.name",
+				
+		colors.name AS "colors.name",
+				
+				
+		fabricShelves.code AS "fabricShelves.code"
+	</sql>
+	
+	<sql id="fabricShelvesItemJoins">
+		
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN base_colors colors ON colors.id = a.color_id
+		LEFT JOIN fabric_shelves fabricShelves ON fabricShelves.id = a.fabric_shelves_id
+	</sql>
+	
+    
+	<select id="get" resultType="FabricShelvesItem" >
+		SELECT 
+			<include refid="fabricShelvesItemColumns"/>
+		FROM fabric_shelves_item a
+		<include refid="fabricShelvesItemJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="FabricShelvesItem" >
+		SELECT 
+			<include refid="fabricShelvesItemColumns"/>
+		FROM fabric_shelves_item a
+		<include refid="fabricShelvesItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="code != null and code != ''">
+				AND a.code = #{code}
+			</if>
+			<if test="fabricShelves.id != null and fabricShelves.id != ''">
+				AND fabricShelves.id = #{fabricShelves.id}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="FabricShelvesItem" >
+		SELECT 
+			<include refid="fabricShelvesItemColumns"/>
+		FROM fabric_shelves_item a
+		<include refid="fabricShelvesItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fabric_shelves_item(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			code,
+			epc,
+			name,
+			supplier_id,
+			color_id,
+			ingredients,
+			fabric_shelves_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{code},
+			#{epc},
+			#{name},
+			#{supplier.id},
+			#{colors.id},
+			#{ingredients},
+			#{fabricShelves.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_shelves_item SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			code = #{code},
+			epc = #{epc},
+			name = #{name},
+			supplier_id = #{supplier.id},
+			color_id = #{colors.id},
+			ingredients = #{ingredients},
+			fabric_shelves_id = #{fabricShelves.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_shelves_item
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_shelves_item SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricShelvesItem" statementType="STATEMENT">
+		select * FROM fabric_shelves_item  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

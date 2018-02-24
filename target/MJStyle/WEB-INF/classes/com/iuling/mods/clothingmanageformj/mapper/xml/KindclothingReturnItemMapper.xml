@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingReturnItemMapper">
+    
+	<sql id="kindclothingReturnItemColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.base_common_role_id AS "baseCommonRole.id",
+		a.return_no AS "returnNo",
+		a.name AS "name",
+		a.epc AS "epc",
+		a.style AS "style",
+		a.editionnumber AS "editionnumber",
+		a.supplier_id AS "supplier.id",
+		a.lendNo AS  "lendNo",
+		a.remarks AS "remarks",
+
+				
+				
+				
+		baseCommonRole.name AS "baseCommonRole.name",
+				
+				
+				
+				
+				
+				
+		supplier.name AS "supplier.name"
+	</sql>
+	
+	<sql id="kindclothingReturnItemJoins">
+		
+		LEFT JOIN base_common_role baseCommonRole ON baseCommonRole.id = a.base_common_role_id
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+	</sql>
+	
+    
+	<select id="get" resultType="KindclothingReturnItem" >
+		SELECT
+			<include refid="kindclothingReturnItemColumns"/>
+		FROM kindclothing_return_item a
+		<include refid="kindclothingReturnItemJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingReturnItem" >
+		SELECT
+			<include refid="kindclothingReturnItemColumns"/>
+		FROM kindclothing_return_item a
+		<include refid="kindclothingReturnItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<!--本次归还详情-->
+	<select id="findList1" resultType="KindclothingReturnItem" >
+		SELECT
+			<include refid="kindclothingReturnItemColumns"/>
+		FROM kindclothing_return_item a
+		<include refid="kindclothingReturnItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="returnNo != null and returnNo != ''">
+				AND a.return_no = #{returnNo}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="KindclothingReturnItem" >
+		SELECT 
+			<include refid="kindclothingReturnItemColumns"/>
+		FROM kindclothing_return_item a
+		<include refid="kindclothingReturnItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_return_item(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			base_common_role_id,
+			return_no,
+			name,
+			epc,
+			style,
+			editionnumber,
+			supplier_id,
+			lendNo,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{baseCommonRole.id},
+			#{returnNo},
+			#{name},
+			#{epc},
+			#{style},
+			#{editionnumber},
+			#{supplier.id},
+			#{lendNo},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_return_item SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			base_common_role_id = #{baseCommonRole.id},
+			return_no = #{returnNo},
+			name = #{name},
+			epc = #{epc},
+			style = #{style},
+			editionnumber = #{editionnumber},
+			supplier_id = #{supplier.id},
+			lendNo = #{lendNo},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_return_item
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_return_item SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingReturnItem" statementType="STATEMENT">
+		select * FROM kindclothing_return_item  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

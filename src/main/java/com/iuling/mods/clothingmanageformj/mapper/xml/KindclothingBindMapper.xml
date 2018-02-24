@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingBindMapper">
+    
+	<sql id="kindclothingBindColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.bar_code AS "barCode",
+		a.epc AS "epc",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.bind_user_id AS "bindUser.id",
+		a.bind_date AS "bindDate",
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+				
+				
+				
+		supplier.name AS "supplier.name",
+				
+		bindUser.name AS "bindUser.name"
+	</sql>
+	
+	<sql id="kindclothingBindJoins">
+		
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN sys_user bindUser ON bindUser.id = a.bind_user_id
+	</sql>
+	
+    
+	<select id="get" resultType="KindclothingBind" >
+		SELECT 
+			<include refid="kindclothingBindColumns"/>
+		FROM kindclothing_bind a
+		<include refid="kindclothingBindJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingBind" >
+		SELECT 
+			<include refid="kindclothingBindColumns"/>
+		FROM kindclothing_bind a
+		<include refid="kindclothingBindJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="barCode != null and barCode != ''">
+				AND a.bar_code = #{barCode}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+			<if test="bindUser != null and bindUser.id != null and bindUser.id != ''">
+				AND a.bind_user_id = #{bindUser.id}
+			</if>
+			<if test="beginBindDate != null and endBindDate != null and beginBindDate != '' and endBindDate != ''">
+				AND a.bind_date BETWEEN #{beginBindDate} AND #{endBindDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="KindclothingBind" >
+		SELECT 
+			<include refid="kindclothingBindColumns"/>
+		FROM kindclothing_bind a
+		<include refid="kindclothingBindJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_bind(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			bar_code,
+			epc,
+			name,
+			supplier_id,
+			bind_user_id,
+			bind_date,
+			kindclothing_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{barCode},
+			#{epc},
+			#{name},
+			#{supplier.id},
+			#{bindUser.id},
+			#{bindDate},
+			#{kindClothing.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_bind SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			bar_code = #{barCode},
+			epc = #{epc},
+			name = #{name},
+			supplier_id = #{supplier.id},
+			bind_user_id = #{bindUser.id},
+			bind_date = #{bindDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_bind
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_bind SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingBind" statementType="STATEMENT">
+		select * FROM kindclothing_bind  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

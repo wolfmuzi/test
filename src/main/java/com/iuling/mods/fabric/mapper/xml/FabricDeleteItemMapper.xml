@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricDeleteItemMapper">
+    
+	<sql id="fabricDeleteItemColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.bar_code AS "barCode",
+		a.epc AS "epc",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.fabric_delete_id AS "fabricDelete.id",
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+				
+				
+				
+		supplier.name AS "supplier.name",
+				
+		fabricDelete.code AS "fabricDelete.code"
+	</sql>
+	
+	<sql id="fabricDeleteItemJoins">
+		
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN fabric_delete fabricDelete ON fabricDelete.id = a.fabric_delete_id
+	</sql>
+	
+    
+	<select id="get" resultType="FabricDeleteItem" >
+		SELECT 
+			<include refid="fabricDeleteItemColumns"/>
+		FROM fabric_delete_item a
+		<include refid="fabricDeleteItemJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="FabricDeleteItem" >
+		SELECT 
+			<include refid="fabricDeleteItemColumns"/>
+		FROM fabric_delete_item a
+		<include refid="fabricDeleteItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="barCode != null and barCode != ''">
+				AND a.bar_code = #{barCode}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+
+			<if test="fabricDelete != null and fabricDelete.id != null and fabricDelete.id != ''">
+				AND a.fabric_delete_id = #{fabricDelete.id}
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="FabricDeleteItem" >
+		SELECT 
+			<include refid="fabricDeleteItemColumns"/>
+		FROM fabric_delete_item a
+		<include refid="fabricDeleteItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fabric_delete_item(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			bar_code,
+			epc,
+			name,
+			supplier_id,
+			fabric_delete_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{barCode},
+			#{epc},
+			#{name},
+			#{supplier.id},
+			#{fabricDelete.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_delete_item SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			bar_code = #{barCode},
+			epc = #{epc},
+			name = #{name},
+			supplier_id = #{supplier.id},
+			fabric_delete_id = #{fabricDelete.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_delete_item
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_delete_item SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricDeleteItem" statementType="STATEMENT">
+		select * FROM fabric_delete_item  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

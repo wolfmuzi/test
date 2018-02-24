@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricOrderMapper">
+    
+	<sql id="fabricOrderColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.code AS "code",
+		a.common_role_id AS "commonRole.id",
+		role.name AS "commonRole.name",
+		a.order_date AS "orderDate",
+		a.num AS "num",
+		a.status AS "status",
+		a.remarks AS "remarks"
+	</sql>
+	
+	<sql id="fabricOrderJoins">
+		LEFT JOIN base_common_role role ON role.id = a.common_role_id
+	</sql>
+	
+    
+	<select id="get" resultType="FabricOrder" >
+		SELECT 
+			<include refid="fabricOrderColumns"/>
+		FROM fabric_order a
+		<include refid="fabricOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="FabricOrder" >
+		SELECT 
+			<include refid="fabricOrderColumns"/>
+		FROM fabric_order a
+		<include refid="fabricOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="code != null and code != ''">
+				AND a.code = #{code}
+			</if>
+			<if test="commonRole != null and commonRole.id != null and commonRole.id != ''">
+				AND a.common_role_id = #{commonRole.id}
+			</if>
+			<if test="beginOrderDate != null and endOrderDate != null and beginOrderDate != '' and endOrderDate != ''">
+				AND a.order_date BETWEEN #{beginOrderDate} AND #{endOrderDate}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="FabricOrder" >
+		SELECT 
+			<include refid="fabricOrderColumns"/>
+		FROM fabric_order a
+		<include refid="fabricOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fabric_order(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			code,
+			common_role_id,
+			order_date,
+			num,
+			status,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{code},
+			#{commonRole.id},
+			#{orderDate},
+			#{num},
+			#{status},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_order SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			code = #{code},
+			common_role_id = #{commonRole.id},
+			order_date = #{orderDate},
+			num = #{num},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_order
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricOrder" statementType="STATEMENT">
+		select * FROM fabric_order  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingLendMapper">
+    
+	<sql id="kindclothingLendColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.base_common_role_id AS "baseCommonRole.id",
+		a.lend_no AS "lendNo",
+		a.lend_total AS "lendTotal",
+		a.lend_current_num AS "lendCurrentNum",
+		a.lend_date AS "lendDate",
+		a.expected_return_date AS "expectedReturnDate",
+		a.lend_return_status AS "lendReturnStatus",
+		a.remarks AS "remarks",
+				
+
+
+
+
+
+		baseCommonRole.name AS "baseCommonRole.name",
+		baseCommonRole.type AS "baseCommonRole.type"
+	</sql>
+	
+	<sql id="kindclothingLendJoins">
+
+		LEFT JOIN base_common_role baseCommonRole ON baseCommonRole.id = a.base_common_role_id
+	</sql>
+
+	<!-- 根据是否借出、上架状态获取样衣信息 -->
+	<select id="findListByParam" parameterType="com.iuling.mods.clothingmanageformj.param.KindclothingLendParam" resultType="KindClothing" >
+		SELECT
+		b.*,
+		supplier.id AS "supplier.id",
+		supplier.name AS supplierName,
+		epc
+		FROM kindclothing_stock k
+		LEFT JOIN base_kindclothing b ON b.number=k.bar_code
+		LEFT JOIN base_supplier supplier ON supplier.id = k.supplier_id
+		<where>
+			AND k.shelves_status = #{shelvesStatus}
+			AND k.is_lend = #{isLend}
+			AND k.epc in
+			<foreach item="item" index="index" collection="epcList" open="("
+					 separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+	</select>
+
+	<select id="get" resultType="KindclothingLend" >
+		SELECT
+			<include refid="kindclothingLendColumns"/>
+		FROM kindclothing_lend a
+		<include refid="kindclothingLendJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingLend" >
+		SELECT 
+			<include refid="kindclothingLendColumns"/>
+		FROM kindclothing_lend a
+		<include refid="kindclothingLendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="baseCommonRole != null and baseCommonRole.id != null and baseCommonRole.id != ''">
+				AND a.base_common_role_id = #{baseCommonRole.id}
+			</if>
+			<if test="lendNo != null and lendNo != ''">
+				AND a.lend_no = #{lendNo}
+			</if>
+			<if test="beginLendDate != null and endLendDate != null and beginLendDate != '' and endLendDate != ''">
+				AND a.lend_date BETWEEN #{beginLendDate} AND #{endLendDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="KindclothingLend" >
+		SELECT 
+			<include refid="kindclothingLendColumns"/>
+		FROM kindclothing_lend a
+		<include refid="kindclothingLendJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_lend(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			base_common_role_id,
+			lend_no,
+			lend_total,
+			lend_current_num,
+			lend_date,
+			expected_return_date,
+			lend_return_status,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{baseCommonRole.id},
+			#{lendNo},
+			#{lendTotal},
+			#{lendCurrentNum},
+			#{lendDate},
+			#{expectedReturnDate},
+			#{lendReturnStatus},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_lend SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			base_common_role_id = #{baseCommonRole.id},
+			lend_no = #{lendNo},
+			lend_total = #{lendTotal},
+			lend_current_num = #{lendCurrentNum},
+			lend_date = #{lendDate},
+			expected_return_date = #{expectedReturnDate},
+			lend_return_status = #{lendReturnStatus},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_lend
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_lend SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingLend" statementType="STATEMENT">
+		select * FROM kindclothing_lend  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

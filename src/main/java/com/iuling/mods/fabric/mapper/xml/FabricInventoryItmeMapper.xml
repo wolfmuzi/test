@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.fabric.mapper.FabricInventoryItmeMapper">
+    
+	<sql id="fabricInventoryItmeColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.fabric_id AS "fabric.id",
+		a.type AS "type",
+
+		a.remarks AS "remarks",
+				
+				
+				
+				
+				
+				
+		fabric.name AS "fabric.name",
+		shelves.name AS "fabric.shelves.name"
+				
+		fabricInventory.code AS "fabricInventory.code"
+	</sql>
+	
+	<sql id="fabricInventoryItmeJoins">
+		
+		LEFT JOIN base_fabric fabric ON fabric.id = a.fabric_id
+
+		LEFT JOIN fabric_stock stock ON stock.bar_code = fabric.barcode
+		LEFT JOIN base_shelves shelves ON  shelves.id = stock.shelves_id
+	</sql>
+	
+    
+	<select id="get" resultType="FabricInventoryItme" >
+		SELECT 
+			<include refid="fabricInventoryItmeColumns"/>
+		FROM fabric_inventory_itme a
+		<include refid="fabricInventoryItmeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+
+	<select id="findByParam" resultType="Fabric">
+		SELECT
+		f.*,stock.epc AS "epc",supplier.name AS "supplier.name",
+		shelves.name AS "shelves.name"
+		FROM fabric_inventory_itme a
+		LEFT JOIN fabric_inventory inventory ON  inventory.id = a.fabric_inventory_id
+		LEFT  JOIN  base_fabric f ON f.id = a.fabric_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+		LEFT JOIN fabric_stock stock ON stock.bar_code = f.barcode
+		LEFT JOIN base_shelves shelves ON shelves.id = stock.shelves_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+
+			<if test="code != null and code != ''">
+				AND inventory.code = #{code}
+			</if>
+
+			<if test="status != null and status != ''">
+				AND stock.shelves_status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+
+	<select id="findByParam1" resultType="Fabric" parameterType="Fabric">
+		SELECT
+		f.*,stock.epc AS "epc",supplier.name AS "supplier.name",
+		shelves.name AS "shelves.name"
+		FROM fabric_inventory_itme a
+		LEFT JOIN fabric_inventory inventory ON  inventory.id = a.fabric_inventory_id
+		LEFT  JOIN  base_fabric f ON f.id = a.fabric_id
+		LEFT JOIN base_supplier supplier ON supplier.id = f.supplier_id
+		LEFT JOIN fabric_stock stock ON stock.bar_code = f.barcode
+		LEFT JOIN base_shelves shelves ON shelves.id = stock.shelves_id
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+
+			<if test="code != null and code != ''">
+				AND inventory.code = #{code}
+			</if>
+
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+
+			<if test="barcode != null and barcode != ''">
+				AND f.barcode = #{barcode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+	<select id="findList" resultType="FabricInventoryItme" >
+		SELECT 
+			<include refid="fabricInventoryItmeColumns"/>
+		FROM fabric_inventory_itme a
+		<include refid="fabricInventoryItmeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+			<if test="fabric.barcode != null and fabric.barcode != ''">
+				AND f.barcode = #{fabric.barcode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="FabricInventoryItme" >
+		SELECT 
+			<include refid="fabricInventoryItmeColumns"/>
+		FROM fabric_inventory_itme a
+		<include refid="fabricInventoryItmeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fabric_inventory_itme(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			fabric_id,
+			type,
+			fabric_inventory_id,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{fabric.id},
+			#{type},
+			#{fabricInventory.id},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fabric_inventory_itme SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			fabric_id = #{fabric.id},
+			type = #{type},
+			fabric_inventory_id = #{fabricInventory.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fabric_inventory_itme
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fabric_inventory_itme SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="FabricInventoryItme" statementType="STATEMENT">
+		select * FROM fabric_inventory_itme  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

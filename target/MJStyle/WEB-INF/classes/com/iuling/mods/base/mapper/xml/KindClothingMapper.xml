@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.base.mapper.KindClothingMapper">
+
+	<sql id="kindClothingColumns">
+		a.id AS "id",
+		a.pictures AS "pictures",
+		a.number AS "number",
+		a.name AS "name",
+		a.style AS "style",
+		a.editionnumber AS "editionNumber",
+		a.supplier_id AS "supplier.id",
+		a.warehouse_id AS "warehouse.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.colour_id AS "colour.id",
+		a.max_class_id AS "maxClass.id",
+		a.sizes_id AS "sizes.id",
+		a.season AS "season",
+		a.year AS "year",
+		a.shelves_date AS "shelvesDate",
+
+
+
+		supplier.name AS "supplier.name",
+
+		warehouse.name AS "warehouse.name",
+
+		colour.name AS "colour.name",
+		colour.number AS "colour.number",
+
+		maxClass.code AS "maxClass.code",
+		maxClass.name AS "maxClass.name",
+
+		sizes.code AS "sizes.code",
+		sizes.name AS "sizes.name"
+	</sql>
+
+	<sql id="kindClothingJoins">
+
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN base_warehouse warehouse ON warehouse.id = a.warehouse_id
+		LEFT JOIN base_colors colour ON colour.id = a.colour_id
+		LEFT JOIN base_max_class maxClass ON maxClass.id = a.max_class_id
+		LEFT JOIN base_sizes sizes ON sizes.id = a.sizes_id
+
+	</sql>
+
+
+	<select id="get" resultType="KindClothing" >
+		SELECT
+		<include refid="kindClothingColumns"/>
+		FROM base_kindclothing a
+		<include refid="kindClothingJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="KindClothing" >
+		SELECT
+		<include refid="kindClothingColumns"/>
+		FROM base_kindclothing a
+		<include refid="kindClothingJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="style != null and style != ''">
+				AND a.style = #{style}
+			</if>
+			<if test="editionNumber != null and editionNumber != ''">
+				AND a.editionnumber = #{editionNumber}
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+			<if test="warehouse != null and warehouse.id != null and warehouse.id != ''">
+				AND a.warehouse_id = #{warehouse.id}
+			</if>
+			<if test="colour != null and colour != ''">
+				AND a.colour = #{colour}
+			</if>
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="beginShelvesDate != null and endShelvesDate != null and beginShelvesDate != '' and endShelvesDate != ''">
+				AND a.shelves_date BETWEEN #{beginShelvesDate} AND #{endShelvesDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="KindClothing" >
+		SELECT
+		<include refid="kindClothingColumns"/>
+		FROM base_kindclothing a
+		<include refid="kindClothingJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllKindClothing" resultType="KindClothing" >
+		SELECT
+		<include refid="kindClothingColumns"/>
+		FROM base_kindclothing a
+		<include refid="kindClothingJoins"/>
+		<where>
+			a.del_flag = 0
+			${dataScope}
+		</where>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO base_kindclothing(
+		id,
+		pictures,
+		number,
+		name,
+		style,
+		editionnumber,
+		supplier_id,
+		warehouse_id,
+		create_by,
+		create_date,
+		update_by,
+		update_date,
+		remarks,
+		del_flag,
+		colour_id,
+		max_class_id,
+		sizes_id,
+		season,
+		year,
+		shelves_date
+		) VALUES (
+		#{id},
+		#{pictures},
+		#{number},
+		#{name},
+		#{style},
+		#{editionNumber},
+		#{supplier.id},
+		#{warehouse.id},
+		#{createBy.id},
+		#{createDate},
+		#{updateBy.id},
+		#{updateDate},
+		#{remarks},
+		#{delFlag},
+		#{colour.id},
+		#{maxClass.id},
+		#{sizes.id},
+		#{season},
+		#{year},
+		#{shelvesDate}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE base_kindclothing SET
+		pictures = #{pictures},
+		number = #{number},
+		name = #{name},
+		style = #{style},
+
+		editionnumber = #{editionNumber},
+		supplier_id = #{supplier.id},
+		warehouse_id = #{warehouse.id},
+		update_by = #{updateBy.id},
+		update_date = #{updateDate},
+		remarks = #{remarks},
+		colour_id = #{colour.id},
+		max_class_id = #{maxClass.id},
+		sizes_id = #{sizes.id},
+		season = #{season},
+		year = #{year},
+		shelves_date = #{shelvesDate}
+		WHERE id = #{id}
+	</update>
+
+
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM base_kindclothing
+		WHERE id = #{id}
+	</update>
+
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE base_kindclothing SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindClothing" statementType="STATEMENT">
+		select * FROM base_kindclothing  where ${propertyName} = '${value}'
+	</select>
+
+</mapper>

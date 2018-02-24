@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.clothingmanageformj.mapper.KindclothingUnbindItemMapper">
+    
+	<sql id="kindclothingUnbindItemColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.bar_code AS "barCode",
+		a.epc AS "epc",
+		a.name AS "name",
+		a.supplier_id AS "supplier.id",
+		a.kindclothing_unbind_id AS "kindclothingUnbind.id",
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+		supplier.name AS "supplier.name",
+				
+		kindclothingUnbind.code AS "kindclothingUnbind.code"
+	</sql>
+	
+	<sql id="kindclothingUnbindItemJoins">
+		
+		LEFT JOIN base_supplier supplier ON supplier.id = a.supplier_id
+		LEFT JOIN kindclothing_unbind kindclothingUnbind ON kindclothingUnbind.id = a.kindclothing_unbind_id
+	</sql>
+	
+    
+	<select id="get" resultType="KindclothingUnbindItem" >
+		SELECT 
+			<include refid="kindclothingUnbindItemColumns"/>
+		FROM kindclothing_unbind_item a
+		<include refid="kindclothingUnbindItemJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="KindclothingUnbindItem" >
+		SELECT 
+			<include refid="kindclothingUnbindItemColumns"/>
+		FROM kindclothing_unbind_item a
+		<include refid="kindclothingUnbindItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="barCode != null and barCode != ''">
+				AND a.bar_code = #{barCode}
+			</if>
+			<if test="epc != null and epc != ''">
+				AND a.epc = #{epc}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+
+			<if test="kindclothingUnbind != null and kindclothingUnbind.id != null and kindclothingUnbind.id != ''">
+				AND a.kindclothing_unbind_id = #{kindclothingUnbind.id}
+			</if>
+			<if test="supplier != null and supplier.id != null and supplier.id != ''">
+				AND a.supplier_id = #{supplier.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="KindclothingUnbindItem" >
+		SELECT 
+			<include refid="kindclothingUnbindItemColumns"/>
+		FROM kindclothing_unbind_item a
+		<include refid="kindclothingUnbindItemJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO kindclothing_unbind_item(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			bar_code,
+			epc,
+			name,
+			supplier_id,
+			kindclothing_unbind_id
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{barCode},
+			#{epc},
+			#{name},
+			#{supplier.id},
+			#{kindclothingUnbind.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE kindclothing_unbind_item SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			bar_code = #{barCode},
+			epc = #{epc},
+			name = #{name},
+			supplier_id = #{supplier.id},
+			kindclothing_unbind_id = #{kindclothingUnbind.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM kindclothing_unbind_item
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE kindclothing_unbind_item SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="KindclothingUnbindItem" statementType="STATEMENT">
+		select * FROM kindclothing_unbind_item  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

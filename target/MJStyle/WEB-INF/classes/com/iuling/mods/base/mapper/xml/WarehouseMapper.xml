@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.base.mapper.WarehouseMapper">
+
+    <resultMap id="warehouseResult" type="Warehouse">
+   		<result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="sort" column="sort" />
+		<result property="parentIds" column="parentIds" />
+		<result property="number" column="number" />
+		<association property="hasChildren" column="id" select="hasChildren" />
+    </resultMap>
+    
+	<sql id="warehouseColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.parent_id AS "parent.id",
+		a.parent_ids AS "parentIds",
+		a.sort AS "sort"
+	</sql>
+	
+
+	
+
+	<sql id="warehouseJoins">
+		
+	</sql>
+	
+
+    
+	<select id="get" resultType="Warehouse">
+		SELECT 
+			<include refid="warehouseColumns"/>
+		FROM base_warehouse a
+		<include refid="warehouseJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="getByName" resultType="Warehouse">
+		SELECT
+			<include refid="warehouseColumns"/>
+		FROM base_warehouse a
+		<include refid="warehouseJoins"/>
+		WHERE a.name = #{name}
+	</select>
+
+	<select id="findList" resultType="Warehouse">
+		SELECT 
+			<include refid="warehouseColumns"/>
+		FROM base_warehouse a
+		<include refid="warehouseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="parent != null and parent.id != null and parent.id != ''">
+				AND a.parent_id = #{parent.id}
+			</if>
+			<if test="parentIds != null and parentIds != ''">
+				AND a.parent_ids LIKE 
+					<if test="dbName == 'oracle'">'%'||#{parentIds}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{parentIds}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{parentIds},'%')</if>
+			</if>
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="findAllList" resultType="Warehouse">
+		SELECT 
+			<include refid="warehouseColumns"/>
+		FROM base_warehouse a
+		<include refid="warehouseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<select id="getChildren" parameterType="String" resultMap="warehouseResult">  
+        select * from base_warehouse where parent_id = #{id} ORDER BY sort 
+    </select> 
+     
+    <select id="hasChildren" parameterType="String" resultType="Boolean">
+        select case when exists(select 1 from base_warehouse where parent_id = #{id}) then 1 else 0 end from dual
+    </select>
+    
+	<select id="findByParentIdsLike" resultType="Warehouse">
+		SELECT
+			a.id,
+			a.parent_id AS "parent.id",
+			a.parent_ids
+		FROM base_warehouse a
+		<include refid="warehouseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.parent_ids LIKE #{parentIds}
+		</where>
+		ORDER BY a.sort ASC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO base_warehouse(
+			id,
+			number,
+			name,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			parent_id,
+			parent_ids,
+			sort
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{parent.id},
+			#{parentIds},
+			#{sort}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE base_warehouse SET 	
+			number = #{number},
+			name = #{name},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			parent_id = #{parent.id},
+			parent_ids = #{parentIds},
+			sort = #{sort}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE base_warehouse SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM base_warehouse
+		WHERE id = #{id} OR parent_ids LIKE 
+		<if test="dbName == 'oracle'">'%,'||#{id}||',%'</if>
+		<if test="dbName == 'mssql'">'%,'+#{id}+',%'</if>
+        <if test="dbName == 'mysql'">CONCAT('%,', #{id}, ',%')</if>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE base_warehouse SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id} OR parent_ids LIKE 
+		<if test="dbName == 'oracle'">'%,'||#{id}||',%'</if>
+		<if test="dbName == 'mssql'">'%,'+#{id}+',%'</if>
+        <if test="dbName == 'mysql'">CONCAT('%,', #{id}, ',%')</if>
+	</update>
+	
+</mapper>

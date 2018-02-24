@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.base.mapper.SupplierMapper">
+    
+	<sql id="supplierColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.address AS "address",
+		a.contacts AS "contacts",
+		a.phone AS "phone",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.type AS "type"
+	</sql>
+	
+	<sql id="supplierJoins">
+		
+	</sql>
+	
+    
+	<select id="get" resultType="Supplier" >
+		SELECT 
+			<include refid="supplierColumns"/>
+		FROM base_supplier a
+		<include refid="supplierJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Supplier" >
+		SELECT 
+			<include refid="supplierColumns"/>
+		FROM base_supplier a
+		<include refid="supplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name LIKE
+				<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="id != null and id != ''">
+				AND a.id = #{id}
+			</if>
+
+			<if test="address != null and address != ''">
+				AND a.address = #{address}
+			</if>
+			<if test="contacts != null and contacts != ''">
+				AND a.contacts = #{contacts}
+			</if>
+			<if test="phone != null and phone != ''">
+				AND a.phone = #{phone}
+			</if>
+			<if test="type != null and type != ''">
+				AND a.type = #{type}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Supplier" >
+		SELECT 
+			<include refid="supplierColumns"/>
+		FROM base_supplier a
+		<include refid="supplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO base_supplier(
+			id,
+			number,
+			name,
+			address,
+			contacts,
+			phone,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			type
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{address},
+			#{contacts},
+			#{phone},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{type}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE base_supplier SET 	
+			number = #{number},
+			name = #{name},
+			address = #{address},
+			contacts = #{contacts},
+			phone = #{phone},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			type = #{type}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM base_supplier
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE base_supplier SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Supplier" statementType="STATEMENT">
+		select * FROM base_supplier  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

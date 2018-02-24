@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iuling.mods.base.mapper.EquipmentUseMapper">
+    
+	<sql id="equipmentUseColumns">
+		a.id AS "id",
+		a.equipment_id AS "equipment.id",
+		a.user_id AS "user.id",
+		a.starttime AS "startTime",
+		a.endtime AS "endTime",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+				
+		equipment.number AS "equipment.number",
+		equipment.name AS "equipment.name",
+		user.name AS "user.name"
+	</sql>
+	
+	<sql id="equipmentUseJoins">
+		
+		LEFT JOIN base_equipment equipment ON equipment.id = a.equipment_id
+		LEFT JOIN sys_user user ON user.id = a.user_id
+	</sql>
+	
+    
+	<select id="get" resultType="EquipmentUse" >
+		SELECT 
+			<include refid="equipmentUseColumns"/>
+		FROM base_equipment_use a
+		<include refid="equipmentUseJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="EquipmentUse" >
+		SELECT 
+			<include refid="equipmentUseColumns"/>
+		FROM base_equipment_use a
+		<include refid="equipmentUseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+			<if test="equipment != null and equipment.id != null and equipment.id != ''">
+				AND a.equipment_id = #{equipment.id}
+			</if>
+			<if test="user != null and user.id != null and user.id != ''">
+				AND a.user_id = #{user.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="EquipmentUse" >
+		SELECT 
+			<include refid="equipmentUseColumns"/>
+		FROM base_equipment_use a
+		<include refid="equipmentUseJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			${dataScope}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO base_equipment_use(
+			id,
+			equipment_id,
+			user_id,
+			starttime,
+			endtime,
+			del_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks
+		) VALUES (
+			#{id},
+			#{equipment.id},
+			#{user.id},
+			#{startTime},
+			#{endTime},
+			#{delFlag},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE base_equipment_use SET 	
+			equipment_id = #{equipment.id},
+			user_id = #{user.id},
+			starttime = #{startTime},
+			endtime = #{endTime},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM base_equipment_use
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE base_equipment_use SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="EquipmentUse" statementType="STATEMENT">
+		select * FROM base_equipment_use  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>
